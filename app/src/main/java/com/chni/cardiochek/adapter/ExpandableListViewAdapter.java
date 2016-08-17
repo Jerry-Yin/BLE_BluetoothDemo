@@ -183,33 +183,40 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
                                  * 特定服务
                                  * 特定特征
                                  */
-                                if (!TextUtils.isEmpty(data) &&
-                                        mHeadList.get(groupPosition).getUuid().equals(BluetoothLeService.RX_SERVICE_UUID) &&
-                                            characteristic.getUuid().equals(BluetoothLeService.RX_CHAR_UUID)) {
-                                    try {
-                                        characteristic.setValue(data.getBytes("UTF-8"));
+                                if (TextUtils.isEmpty(data) ){
+                                    Toast.makeText(context, "data can not be null !", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                if (!mHeadList.get(groupPosition).getUuid().equals(BluetoothLeService.RX_SERVICE_UUID)) {
+                                    Toast.makeText(context, "this service can not be used to send data !", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                if (!characteristic.getUuid().equals(BluetoothLeService.RX_CHAR_UUID)) {
+                                    Toast.makeText(context, "characteristic not correct !", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
 
-                                    } catch (UnsupportedEncodingException e) {
-                                        e.printStackTrace();
-                                    }
-                                    if (DeviceControlActivity.mBluetoothLeService == null) {
-                                        Toast.makeText(context, "service is null", Toast.LENGTH_SHORT).show();
-                                        return;
-                                    } else {
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                DeviceControlActivity.mBluetoothLeService.writeCharacteristic(characteristic);
+                                try {
+                                    characteristic.setValue(data.getBytes("UTF-8"));
+
+                                } catch (UnsupportedEncodingException e) {
+                                    e.printStackTrace();
+                                }
+                                if (DeviceControlActivity.mBluetoothLeService == null) {
+                                    Toast.makeText(context, "service is null", Toast.LENGTH_SHORT).show();
+                                    return;
+                                } else {
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            DeviceControlActivity.mBluetoothLeService.writeCharacteristic(characteristic);
 //                                                DeviceControlActivity.mBluetoothLeService.writeRXCharacteristic(data);
 //                                DeviceControlActivity.mBluetoothLeService.setCharacteristicNotification(characteristic, true);
 //                                DeviceControlActivity.mBluetoothLeService.readCharacteristic(characteristic);
-                                            }
-                                        }.run();
-                                    }
-                                    dialog.dismiss();
-                                } else {
-                                    Toast.makeText(context, "data can not be null !", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }.run();
                                 }
+                                dialog.dismiss();
                             }
                         })
                         .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
