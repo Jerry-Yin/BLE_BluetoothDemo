@@ -2,6 +2,7 @@ package com.chni.cardiochek.adapter;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -149,7 +150,7 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
         final BluetoothGattCharacteristic characteristic = mChildList.get(groupPosition).get(childPosition);
         childHolder.characteristicId.setText("特征" + String.valueOf(characteristic.getInstanceId()));
         childHolder.uuid.setText(characteristic.getUuid().toString());
-        childHolder.property.setText(String.valueOf(characteristic.getProperties()));
+        childHolder.property.setText(getProperty(characteristic.getProperties()));
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -198,7 +199,6 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
 
                                 try {
                                     characteristic.setValue(data.getBytes("UTF-8"));
-
                                 } catch (UnsupportedEncodingException e) {
                                     e.printStackTrace();
                                 }
@@ -229,6 +229,50 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
             }
         });
         return convertView;
+    }
+
+    /**
+     * 对应特征值的权限
+     * @param properties
+     * @return
+     */
+    private String getProperty(int properties) {
+        String property = null;
+        switch (properties){
+            case BluetoothGattCharacteristic.PROPERTY_BROADCAST:
+                property = "broadcast";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS:
+                property = "extended_props";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_INDICATE:
+                property = "indicate";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_NOTIFY:
+                property = "notify";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_READ:
+                property = "read";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE:
+                property = "signed_write";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_WRITE:
+                property = "write";
+                break;
+
+            case BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE:
+                property = "write_no_response";
+                break;
+        }
+
+        return property;
     }
 
     @Override
