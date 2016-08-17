@@ -373,6 +373,7 @@ public class BluetoothLeService extends Service {
 
     /**
      * Enable TXNotification
+     * 打开 notify 通知权限，才能接受到蓝牙发送过来的消息
      *
      * @return
      */
