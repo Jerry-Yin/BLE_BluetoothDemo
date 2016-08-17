@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -18,25 +17,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.ListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chni.cardiochek.R;
 import com.chni.cardiochek.adapter.ExpandableListViewAdapter;
-import com.chni.cardiochek.adapter.ServiceAdapter;
 import com.chni.cardiochek.service.BluetoothLeService;
 import com.chni.cardiochek.view.CustomExpandableListView;
 
+import java.io.UnsupportedEncodingException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("NewApi")
-public class DeviceControlActivity extends Activity {
+public class DeviceControlActivity extends Activity implements View.OnClickListener {
     private final static String TAG = DeviceControlActivity.class
             .getSimpleName();
 
@@ -49,6 +48,8 @@ public class DeviceControlActivity extends Activity {
 
     private TextView mConnectionState;
     private TextView mDataField;
+    private Button mBtnSend;
+    private EditText mTxtMsg;
     private CustomExpandableListView mListView;
     private String mDeviceName;
     private String mDeviceAddress;
@@ -110,9 +111,16 @@ public class DeviceControlActivity extends Activity {
                 invalidateOptionsMenu();
 //                clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                mBluetoothLeService.enableTXNotification();
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+//                byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
+//                try {
+//                    displayData(new String(data, "UTF-8"));
+//                } catch (UnsupportedEncodingException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
     };
@@ -136,6 +144,9 @@ public class DeviceControlActivity extends Activity {
         ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
         mDataField = (TextView) findViewById(R.id.data_value);
+        mBtnSend = (Button) findViewById(R.id.btn_send);
+        mBtnSend.setOnClickListener(this);
+        mTxtMsg = (EditText) findViewById(R.id.edit_text_msg);
 
         // 显示当前服务
         mListView = (CustomExpandableListView) findViewById(R.id.list_service);
@@ -233,11 +244,16 @@ public class DeviceControlActivity extends Activity {
 
     StringBuffer sb = new StringBuffer();
 
-    private void displayData(String data) {
-        sb.append(data);
-        Log.d(TAG, "displayData: " + sb.toString());
-        mDataField.setText(data);
-        Toast.makeText(this, "data = " + data, Toast.LENGTH_LONG).show();
+    private void displayData(final String data) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                sb.append(data);
+                Log.d(TAG, "displayData: " + sb.toString());
+                mDataField.setText(data);
+                Toast.makeText(getApplicationContext(), "data = " + data, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     // Demonstrates how to iterate through the supported GATT
@@ -258,12 +274,13 @@ public class DeviceControlActivity extends Activity {
                 uuid = gattCharacteristic.getUuid().toString();
                 //UUID_KEY_DATA是可以跟蓝牙模块串口通信的Characteristic
 //                if (uuid.contains("fff4")) {
-                Log.d(TAG, "cha_uuid = "+uuid);
-                if (uuid.equals(UUID_KEY_DATA) || uuid.equals("6e400002-b5a3-f393-e0a9-e50e24dcca9e") || gattCharacteristic.getProperties() == 10) {
-                    Log.e("console", "2gatt Characteristic: " + uuid);
-                    mBluetoothLeService.setCharacteristicNotification(gattCharacteristic, true);
-//                    mBluetoothLeService.readCharacteristic(gattCharacteristic);
-                }
+                Log.d(TAG, "cha_uuid = " + uuid);
+//                if (uuid.equals(BluetoothLeService.TX_CHAR_UUID)) {
+////                    Log.d("console", "2gatt Characteristic: " + uuid);
+//                    mBluetoothLeService.setCharacteristicNotification(gattCharacteristic, true);
+//////                    mBluetoothLeService.readCharacteristic(gattCharacteristic);
+//                }
+
             }
         }
 
@@ -399,6 +416,23 @@ public class DeviceControlActivity extends Activity {
             return df.format(value / 38.7);
         }
         return null;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.btn_send) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String message = mTxtMsg.getText().toString();
+                    //                        Message msg = new Message();
+//                        msg.what = 1;
+//                        Handler.sendMessage(msg);
+                    // send data to service
+                    mBluetoothLeService.writeRXCharacteristic(message);
+                }
+            }).start();
+        }
     }
 
     /**

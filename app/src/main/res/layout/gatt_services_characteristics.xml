@@ -7,7 +7,7 @@
     <LinearLayout android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp">
+        android:layout_margin="2dp">
         <TextView android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/label_device_address"
@@ -22,7 +22,7 @@
     <LinearLayout android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp">
+        android:layout_margin="2dp">
         <TextView android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/label_state"
@@ -38,7 +38,7 @@
     <LinearLayout android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp">
+        android:layout_margin="2dp">
         <TextView android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/label_data"
@@ -58,6 +58,23 @@
         android:text="New Button"
         android:id="@+id/button" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:visibility="gone">
+        <EditText
+            android:id="@+id/edit_text_msg"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btn_send"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="send"/>
+    </LinearLayout>
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -71,5 +88,7 @@
         </com.chni.cardiochek.view.CustomExpandableListView>
 
     </ScrollView>
+
+
 
 </LinearLayout>

@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.pm.ProviderInfo;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -16,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +34,9 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
     private Context context;
     private List<BluetoothGattService> mHeadList;
     private List<List<BluetoothGattCharacteristic>> mChildList;
+
+    private BluetoothGattService mCurService;
+    private BluetoothGattCharacteristic mCurCharacteristic;
 
 
 //    private class GroupHolder {
@@ -133,7 +134,7 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
-    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+    public View getChildView(final int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         ChildViewHolder childHolder = null;
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.listitem_characteristic, null);
@@ -172,39 +173,52 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
                 AlertDialog.Builder dialog = new AlertDialog.Builder(context);
                 dialog.setView(editText)
                         .setTitle("send data to ble :")
-                .setPositiveButton("send", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        final String data = editText.getText().toString();
-                        if (!TextUtils.isEmpty(data)){
-                            try {
-                                characteristic.setValue(data.getBytes("UTF-8"));
+                        .setPositiveButton("send", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final String data = editText.getText().toString();
+                                /**
+                                 * 三个条件
+                                 * 数据不为空
+                                 * 特定服务
+                                 * 特定特征
+                                 */
+                                if (!TextUtils.isEmpty(data) &&
+                                        mHeadList.get(groupPosition).getUuid().equals(BluetoothLeService.RX_SERVICE_UUID) &&
+                                            characteristic.getUuid().equals(BluetoothLeService.RX_CHAR_UUID)) {
+                                    try {
+                                        characteristic.setValue(data.getBytes("UTF-8"));
 
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
-                            if (DeviceControlActivity.mBluetoothLeService == null) {
-                                Toast.makeText(context, "service is null", Toast.LENGTH_SHORT).show();
-                                return;
-                            }else {
-                                DeviceControlActivity.mBluetoothLeService.writeCharacteristic(characteristic);
-//                                DeviceControlActivity.mBluetoothLeService.writRXCharacteristic(data);
+                                    } catch (UnsupportedEncodingException e) {
+                                        e.printStackTrace();
+                                    }
+                                    if (DeviceControlActivity.mBluetoothLeService == null) {
+                                        Toast.makeText(context, "service is null", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    } else {
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                DeviceControlActivity.mBluetoothLeService.writeCharacteristic(characteristic);
+//                                                DeviceControlActivity.mBluetoothLeService.writeRXCharacteristic(data);
 //                                DeviceControlActivity.mBluetoothLeService.setCharacteristicNotification(characteristic, true);
 //                                DeviceControlActivity.mBluetoothLeService.readCharacteristic(characteristic);
+                                            }
+                                        }.run();
+                                    }
+                                    dialog.dismiss();
+                                } else {
+                                    Toast.makeText(context, "data can not be null !", Toast.LENGTH_SHORT).show();
+                                }
                             }
-                            dialog.dismiss();
-                        }else {
-                            Toast.makeText(context, "data can not be null !", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
-                .create().show();
+                        })
+                        .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create().show();
             }
         });
         return convertView;
