@@ -1,5 +1,5 @@
 # BLE_BluetoothDemo
-Android低功耗蓝牙开发示例
+Android低功耗蓝4.0牙开发示例
 
 问题发现：
     该蓝牙一共有三个服务service，每个service有不同的特征 characteristic, 而每个特征具有不同的属性（property）;
